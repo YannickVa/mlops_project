@@ -1,0 +1,48 @@
+name: Train Model in Azure ML
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'ml/**'
+      - 'data/**'
+      - 'azure-ml/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+  workflow_dispatch:
+
+env:
+  RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP || 'mlops-rg' }}
+  WORKSPACE_NAME: ${{ vars.WORKSPACE_NAME || 'mlops-ws-yannick' }}
+
+jobs:
+  train-model:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python and Poetry
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.9'
+          cache: 'poetry'
+
+      - name: Install Poetry export plugin
+        run: poetry self add poetry-plugin-export
+
+      - name: Install dependencies
+        run: poetry install --no-interaction --no-root
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+
+      - name: Run Azure ML Training
+        run: |
+          echo "SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}" > .env
+          echo "RESOURCE_GROUP=${{ env.RESOURCE_GROUP }}" >> .env
+          echo "WORKSPACE_NAME=${{ env.WORKSPACE_NAME }}" >> .env
+          poetry run python scripts/run_azure_training.py
