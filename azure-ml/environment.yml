@@ -1,0 +1,5 @@
+name: mlops-env
+version: 1
+build:
+  path: ..
+  dockerfile_path: azure-ml/Dockerfile

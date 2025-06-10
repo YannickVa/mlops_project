@@ -1,0 +1,16 @@
+command: >-
+  python ml/train.py
+  --data_path ${{inputs.training_data}}
+  --model_output_path ${{outputs.model_output}}
+code: ..
+inputs:
+  training_data:
+    type: uri_file
+    path: azureml:training-data:1
+outputs:
+  model_output:
+    type: uri_folder
+environment: azureml:mlops-env:1
+compute: azureml:cpu-cluster
+display_name: svc-training-job
+experiment_name: damage-incidence-prediction

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Prediction Result</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 2em;
+        }
+
+        .result {
+            padding: 1em;
+            border: 1px solid #ccc;
+            max-width: 400px;
+        }
+
+        .result-bad {
+            background-color: #ffdddd;
+        }
+
+        .result-good {
+            background-color: #ddffdd;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Prediction Result</h1>
+    {% if error %}
+    <div class="result result-bad">
+        <h2>Error</h2>
+        <p>{{ error }}</p>
+    </div>
+    {% else %}
+    <div class="result {{ 'result-bad' if prediction == 1 else 'result-good' }}">
+        <h2>Predicted Outcome: {{ 'Damage Incident LIKELY' if prediction == 1 else 'Damage Incident UNLIKELY' }}</h2>
+        <p><strong>Prediction:</strong> {{ prediction }}</p>
+        <p><strong>Confidence Probability:</strong> {{ '%.2f'|format(probability * 100) }}%</p>
+    </div>
+    {% endif %}
+    <br>
+    <a href="/">Make another prediction</a>
+</body>
+
+</html>
