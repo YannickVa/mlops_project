@@ -23,17 +23,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python and Poetry
+      - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.9'
-          cache: 'poetry'
+
+      - name: Install Poetry
+        run: pip install poetry
+
+      - name: Configure Poetry and Install Dependencies
+        run: |
+          poetry config virtualenvs.in-project true
+          poetry install --no-interaction --no-root
+        id: poetry-install
 
       - name: Install Poetry export plugin
         run: poetry self add poetry-plugin-export
-
-      - name: Install dependencies
-        run: poetry install --no-interaction --no-root
 
       - name: Azure Login
         uses: azure/login@v1
