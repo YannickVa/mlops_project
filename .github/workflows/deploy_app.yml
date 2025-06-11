@@ -17,30 +17,26 @@ jobs:
       contents: read
       packages: write
     outputs:
-      image_tag: ${{ steps.meta.outputs.version }}
-      image_owner: ${{ steps.login.outputs.username }}
+      image_tag: ${{ steps.vars.outputs.sha_short }}
+      image_owner: ${{ steps.vars.outputs.owner_lowercase }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set reusable variables
+        id: vars
+        run: |
+          owner_lowercase=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          echo "owner_lowercase=$owner_lowercase" >> $GITHUB_OUTPUT
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
       - name: Log in to GitHub Container Registry
-        id: login
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata (tags, labels) for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            ghcr.io/${{ steps.login.outputs.username }}/mlops-api
-            ghcr.io/${{ steps.login.outputs.username }}/mlops-frontend
-          tags: |
-            type=sha,prefix=
 
       - name: Build and push API image
         uses: docker/build-push-action@v5
@@ -48,9 +44,7 @@ jobs:
           context: .
           file: ./api/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          target: ghcr.io/${{ steps.login.outputs.username }}/mlops-api
+          tags: ghcr.io/${{ steps.vars.outputs.owner_lowercase }}/mlops-api:${{ steps.vars.outputs.sha_short }}
 
       - name: Build and push Frontend image
         uses: docker/build-push-action@v5
@@ -58,9 +52,7 @@ jobs:
           context: .
           file: ./frontend/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          target: ghcr.io/${{ steps.login.outputs.username }}/mlops-frontend
+          tags: ghcr.io/${{ steps.vars.outputs.owner_lowercase }}/mlops-frontend:${{ steps.vars.outputs.sha_short }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -72,9 +64,8 @@ jobs:
 
       - name: Update Kubernetes manifests with new image tag
         run: |
-          IMAGE_OWNER=$(echo "${{ needs.build-and-push.outputs.image_owner }}" | tr '[:upper:]' '[:lower:]')
-          sed -i "s|image: .*mlops-api:.*|image: ghcr.io/$IMAGE_OWNER/mlops-api:${{ needs.build-and-push.outputs.image_tag }}|" k8s/api-deployment.yml
-          sed -i "s|image: .*mlops-frontend:.*|image: ghcr.io/$IMAGE_OWNER/mlops-frontend:${{ needs.build-and-push.outputs.image_tag }}|" k8s/frontend-deployment.yml
+          sed -i "s|image: .*mlops-api:.*|image: ghcr.io/${{ needs.build-and-push.outputs.image_owner }}/mlops-api:${{ needs.build-and-push.outputs.image_tag }}|" k8s/api-deployment.yml
+          sed -i "s|image: .*mlops-frontend:.*|image: ghcr.io/${{ needs.build-and-push.outputs.image_owner }}/mlops-frontend:${{ needs.build-and-push.outputs.image_tag }}|" k8s/frontend-deployment.yml
           echo "Manifests updated."
           cat k8s/api-deployment.yml
           cat k8s/frontend-deployment.yml
