@@ -20,6 +20,7 @@ env:
 jobs:
   training:
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'feat(model): Update model artifacts')"
     outputs:
       job_name: ${{ steps.run_training.outputs.job_name }}
     steps:
@@ -93,7 +94,7 @@ jobs:
         run: |
           git add ml/artifacts/
           if ! git diff --cached --quiet; then
-            git commit -m "feat(model): Update model artifacts from training job ${{ needs.training.outputs.job_name }} [skip ci]"
+            git commit -m "feat(model): Update model artifacts from training job ${{ needs.training.outputs.job_name }}"
             git push
           else
             echo "No changes in model artifacts to commit."
