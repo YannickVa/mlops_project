@@ -10,6 +10,7 @@ on:
       - 'azure-ml/**'
       - 'pyproject.toml'
       - 'poetry.lock'
+      - 'scripts/run_azure_training.py'
   workflow_dispatch:
 
 env:
@@ -17,8 +18,10 @@ env:
   WORKSPACE_NAME: ${{ vars.WORKSPACE_NAME || 'mlops-ws-yannick' }}
 
 jobs:
-  train-model:
+  training:
     runs-on: ubuntu-latest
+    outputs:
+      job_name: ${{ steps.run_training.outputs.job_name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -35,7 +38,6 @@ jobs:
         run: |
           poetry config virtualenvs.in-project true
           poetry install --no-interaction --no-root
-        id: poetry-install
 
       - name: Install Poetry export plugin
         run: poetry self add poetry-plugin-export
@@ -45,9 +47,54 @@ jobs:
         with:
           creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
 
-      - name: Run Azure ML Training
+      - name: Run Azure ML Training and get Job Name
+        id: run_training
         run: |
           echo "SUBSCRIPTION_ID=${{ secrets.AZURE_SUBSCRIPTION_ID }}" > .env
           echo "RESOURCE_GROUP=${{ env.RESOURCE_GROUP }}" >> .env
           echo "WORKSPACE_NAME=${{ env.WORKSPACE_NAME }}" >> .env
-          poetry run python scripts/run_azure_training.py
+          JOB_OUTPUT=$(poetry run python scripts/run_azure_training.py)
+          echo "Full script output:"
+          echo "$JOB_OUTPUT"
+          JOB_NAME=$(echo "$JOB_OUTPUT" | grep -o '"name": "[^"]*' | tail -n 1 | awk -F'"' '{print $4}')
+          echo "job_name=$JOB_NAME" >> $GITHUB_OUTPUT
+
+  commit-new-model:
+    runs-on: ubuntu-latest
+    needs: training
+    if: success() && needs.training.outputs.job_name != ''
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GHCR_PAT }}
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: '{"clientId":"${{ secrets.AZURE_CLIENT_ID }}","clientSecret":"${{ secrets.AZURE_CLIENT_SECRET }}","subscriptionId":"${{ secrets.AZURE_SUBSCRIPTION_ID }}","tenantId":"${{ secrets.AZURE_TENANT_ID }}"}'
+
+      - name: Download Model Artifacts
+        run: |
+          az ml job download \
+            --name ${{ needs.training.outputs.job_name }} \
+            --output-name model_output \
+            --download-path ml/artifacts \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --workspace-name ${{ env.WORKSPACE_NAME }}
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions-bot@github.com"
+
+      - name: Commit and push new model artifacts
+        run: |
+          git add ml/artifacts/
+          if ! git diff --cached --quiet; then
+            git commit -m "feat(model): Update model artifacts from training job ${{ needs.training.outputs.job_name }} [skip ci]"
+            git push
+          else
+            echo "No changes in model artifacts to commit."
+          fi

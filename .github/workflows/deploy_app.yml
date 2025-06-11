@@ -8,6 +8,7 @@ on:
       - 'api/**'
       - 'frontend/**'
       - 'k8s/**'
+      - 'ml/artifacts/**'
   workflow_dispatch:
 
 jobs:
