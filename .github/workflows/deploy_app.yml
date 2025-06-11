@@ -29,7 +29,13 @@ jobs:
         run: |
           owner_lowercase=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           echo "owner_lowercase=$owner_lowercase" >> $GITHUB_OUTPUT
-          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          sha_short=$(git rev-parse --short HEAD)
+          echo "sha_short=$sha_short" >> $GITHUB_OUTPUT
+
+      - name: Debug variables
+        run: |
+          echo "Owner from step output: ${{ steps.vars.outputs.owner_lowercase }}"
+          echo "Tag from step output: ${{ steps.vars.outputs.sha_short }}"
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
