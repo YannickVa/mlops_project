@@ -4,44 +4,34 @@
 <head>
     <meta charset="UTF-8">
     <title>Prediction Result</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <style>
         body {
-            font-family: sans-serif;
-            margin: 2em;
-        }
-
-        .result {
-            padding: 1em;
-            border: 1px solid #ccc;
-            max-width: 400px;
-        }
-
-        .result-bad {
-            background-color: #ffdddd;
-        }
-
-        .result-good {
-            background-color: #ddffdd;
+            max-width: 800px;
+            margin: 2em auto;
         }
     </style>
 </head>
 
 <body>
-    <h1>Prediction Result</h1>
-    {% if error %}
-    <div class="result result-bad">
-        <h2>Error</h2>
-        <p>{{ error }}</p>
-    </div>
-    {% else %}
-    <div class="result {{ 'result-bad' if prediction == 1 else 'result-good' }}">
-        <h2>Predicted Outcome: {{ 'Damage Incident LIKELY' if prediction == 1 else 'Damage Incident UNLIKELY' }}</h2>
-        <p><strong>Prediction:</strong> {{ prediction }}</p>
-        <p><strong>Confidence Probability:</strong> {{ '%.2f'|format(probability * 100) }}%</p>
-    </div>
-    {% endif %}
-    <br>
-    <a href="/">Make another prediction</a>
+    <main class="container">
+        <h1>Prediction Result</h1>
+        {% if error %}
+        <article class="result result-bad">
+            <h2>Error</h2>
+            <p>{{ error }}</p>
+        </article>
+        {% else %}
+        <article class="{{ 'result-bad' if prediction == 1 else 'result-good' }}">
+            <header>
+                Predicted Outcome: {{ 'Damage Incident LIKELY' if prediction == 1 else 'Damage Incident UNLIKELY' }}
+            </header>
+            <p><strong>Prediction:</strong> {{ prediction }}</p>
+            <p><strong>Confidence Probability:</strong> {{ '%.2f'|format(probability * 100) }}%</p>
+        </article>
+        {% endif %}
+        <a href="/" role="button">Make another prediction</a>
+    </main>
 </body>
 
 </html>

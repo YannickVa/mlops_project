@@ -3,44 +3,39 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>MLOps Project: Prediction v2</title>
+    <title>MLOps Project: Prediction</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <style>
         body {
-            font-family: sans-serif;
-            margin: 2em;
-        }
-
-        form {
-            max-width: 800px;
+            max-width: 1000px;
+            margin: 2em auto;
         }
 
         .form-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1em;
-        }
-
-        label {
-            display: block;
         }
     </style>
 </head>
 
 <body>
-    <h1>Damage Incidence Prediction</h1>
-    <p>Fill out the form below to get a prediction.</p>
-    <form action="/predict" method="post" class="form-grid">
-        {% for feature in features %}
-        <div>
-            <label for="{{ feature.name }}">{{ feature.name.replace('_', ' ').title() }}</label>
-            <input type="{{ feature.type }}" id="{{ feature.name }}" name="{{ feature.name }}" step="any"
-                value="{{ feature.default }}" required>
-        </div>
-        {% endfor %}
-        <div style="grid-column: 1 / -1;">
+    <main class="container">
+        <h1>Damage Incidence Prediction</h1>
+        <p>Fill out the form below to get a prediction.</p>
+        <form action="/predict" method="post">
+            <div class="form-grid">
+                {% for feature in features %}
+                <div>
+                    <label for="{{ feature.name }}">{{ feature.name.replace('_', ' ').title() }}</label>
+                    <input type="{{ feature.type }}" id="{{ feature.name }}" name="{{ feature.name }}" step="any"
+                        value="{{ feature.default }}" required>
+                </div>
+                {% endfor %}
+            </div>
             <button type="submit">Predict</button>
-        </div>
-    </form>
+        </form>
+    </main>
 </body>
 
 </html>
