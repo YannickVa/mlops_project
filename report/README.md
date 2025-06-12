@@ -1,19 +1,19 @@
+# Report MLOps Project - Yannick Vanneste
+
 ## 1. Introduction
-The primary objective of this project is to demonstrate a comprehensive, end-to-end Machine Learning Operations (MLOps) workflow. The project moves beyond the theoretical construction of a model to address the practical challenges of its entire lifecycle: automated training, robust deployment, and continuous integration and delivery.
+The primary objective of this project is to demonstrate a comprehensive, end-to-end Machine Learning Operations (MLOps) workflow. The project moves beyond the theoretical construction of a model to address the practical challenges of its entire lifecycle: automated training, robust deployment, and continuous integration and development.
 
 ### 1.1 The Machine Learning Use Case
 The underlying machine learning task is a binary classification problem focused on predicting customer damage incidence. This is part of a project I did for the course 'Machine Learning'. The model is a Support Vector Classifier (SVC) trained on a pre-processed tabular dataset (train_cleaned.csv). The training process, encapsulated in a reusable Python script (ml/train.py), includes essential preprocessing steps such as data shuffling, feature scaling using StandardScaler, and handling class imbalance with the Synthetic Minority Over-sampling Technique (SMOTE). The final trained artifacts are the SVC model and the scaler, saved as .joblib files.
 
 ### 1.2 MLOps Objectives
 This project implements a full MLOps pipeline designed to automate and manage the model's lifecycle, directly addressing the core tasks of the assignment:
-Task 1: Cloud-Based Training: To establish a repeatable and scalable training process within a cloud environment using Azure Machine Learning services.
-Task 2: Containerized Deployment: To deploy the trained model as a production-ready, multi-service application on a Kubernetes cluster, featuring a distinct API backend and a user-facing web frontend.
-Task 3: CI/CD Automation: To create automated workflows using GitHub Actions that handle the retraining of the model and the redeployment of the application in response to changes in code or data, minimizing manual intervention.
+* Task 1: Cloud-Based Training: To establish a repeatable and scalable training process within a cloud environment using Azure Machine Learning services.
+* Task 2: Containerized Deployment: To deploy the trained model as a production-ready, multi-service application on a Kubernetes cluster, featuring a distinct API backend and a user-facing web frontend.
+* Task 3: CI/CD Automation: To create automated workflows using GitHub Actions that handle the retraining of the model and the redeployment of the application in response to changes in code or data, minimizing manual intervention.
 
 ## 2. System Architecture
-The project is implemented as a cohesive system with distinct components responsible for training, serving, and automation. The overall architecture, depicted in Figure 1, illustrates the flow of data and actions across the entire MLOps lifecycle. The system is designed around a central Git repository, which serves as the single source of truth for application code, infrastructure definitions, and the versioned model artifact itself.
-
-*Figure 1: High-Level MLOps System Architecture*
+The project is implemented as a cohesive system with distinct components responsible for training, serving, and automation. The overall architecture illustrates the flow of data and actions across the entire MLOps lifecycle. The system is designed around a central Git repository, which serves as the single source of truth for application code, infrastructure definitions, and the versioned model artifact itself.
 
 The architecture is composed of three primary operational loops: 
 
@@ -96,19 +96,19 @@ The deployed application is fully functional. The FastAPI service provides autom
 
 ![The interactive API documentation provided by FastAPI at the /docs endpoint](images/Screenshot5.png)
 
-*Figure 5: The interactive API documentation provided by FastAPI at the /docs endpoint.*
+*Figure 4: The interactive API documentation provided by FastAPI at the /docs endpoint.*
 
 The user interacts with a simple but effective web interface served by the Flask frontend. This allows for easy submission of data to the model and a clear presentation of the prediction result.
 
 ![The web frontend](images/Screenshot6.png)
 
-*Figure 6: The web frontend, allowing a user to input data for prediction.*
+*Figure 5: The web frontend, allowing a user to input data for prediction.*
 
 The successful deployment and operation of these services within the Kubernetes cluster can be verified using kubectl. The following command confirms that all pods, services, deployments, and the ingress are running as expected within the mlops-ns namespace.
 
 ![Output of kubectl get all -n mlops-ns showing all resources in a running state](images/Screenshot7.png)
 
-Figure 7: Output of kubectl get all -n mlops-ns showing all resources in a running state.
+Figure 6: Output of kubectl get all -n mlops-ns showing all resources in a running state.
 
 ## 5. Task 3: Automation with GitHub Actions CI/CD
 A core objective of this project was to minimize manual intervention by implementing robust Continuous Integration and Continuous Delivery (CI/CD) pipelines. GitHub Actions was used to create two distinct, automated workflows that manage the entire model and application lifecycle.
@@ -125,7 +125,7 @@ Process:
 The success of this automated training and commit-back process is visible in the GitHub Actions logs.
 
 ![A successful run of the "Train Model in Azure ML" workflow](images/Screenshot8.png)
-*Figure 8: A successful run of the "Train Model in Azure ML" workflow, showing the automated training, download, and commit jobs.*
+*Figure 7: A successful run of the "Train Model in Azure ML" workflow, showing the automated training, download, and commit jobs.*
 
 **Model Versioning**: Model versions are tracked implicitly through Git. Since each new model is tied to a specific commit hash, we have a complete, auditable history of every model version and the exact state of the codebase that produced it. The Azure ML Job Name (e.g., dynamic_brush_...) is also captured in the commit message, linking the artifact directly to its cloud training run.
 
@@ -140,7 +140,7 @@ Process:
 3. Manual Deployment Step: For this project, which targets a local Docker Desktop Kubernetes cluster, the workflow concludes by providing the user with the kubectl apply -f k8s/ command. This final manual step is a deliberate design choice to avoid the security risks and complexity of connecting a public CI/CD runner to a local machine's Kubernetes instance. In a cloud-native environment (e.g., using Azure Kubernetes Service), this step would be fully automated.
 
 ![A successful run of the "Build and Deploy Application" workflow](images/Screenshot9.png)
-*Figure 9: A successful run of the "Build and Deploy Application" workflow, showing the image build, push, and manifest update steps.*
+*Figure 8: A successful run of the "Build and Deploy Application" workflow, showing the image build, push, and manifest update steps.*
 
 **Kubernetes Update Strategy**: When kubectl apply is run, Kubernetes handles the update gracefully. By default, the Deployment resource uses a RollingUpdate strategy. This strategy ensures zero downtime by incrementally replacing old pods with new ones. It will create a new pod with the new container image, wait for it to be ready, and only then terminate an old pod, ensuring the application remains available throughout the update process. This is the ideal strategy for a stateless web application like ours.
 
