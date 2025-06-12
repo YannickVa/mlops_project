@@ -1,5 +1,7 @@
 # Report MLOps Project - Yannick Vanneste
 
+Github Link: https://github.com/YannickVa/mlops_project
+
 ## 1. Introduction
 The primary objective of this project is to demonstrate a comprehensive, end-to-end Machine Learning Operations (MLOps) workflow. The project moves beyond the theoretical construction of a model to address the practical challenges of its entire lifecycle: automated training, robust deployment, and continuous integration and development.
 
